@@ -1,0 +1,45 @@
+name: Validate Integ Tests
+
+on:
+  pull_request:
+    paths:
+      - '**/*.template.json'  # Only trigger if .template.json files are touched
+
+jobs:
+  validate-integ:
+    name: Validate Modified Integ Templates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Needed for git diff to work
+
+      - name: Get list of changed .template.json files
+        id: filter_files
+        run: |
+          mkdir -p changed_templates
+          git diff --name-status origin/${{ github.base_ref }}...HEAD \
+            | grep -E '^(A|M)\s+.*\.template\.json$' \
+            | awk '{print $2}' > changed_files.txt || true
+
+          while IFS= read -r file; do
+            mkdir -p "changed_templates/$(dirname "$file")"
+            cp "$file" "changed_templates/$file"
+          done < changed_files.txt
+
+          if [ -s changed_files.txt ]; then
+            echo "files_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "files_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run cfn-guard if templates changed
+        if: steps.filter_files.outputs.files_changed == 'true'
+        uses: your-username/cfn-guard-granular-gh-action@v1
+        with:
+          data_directory: './changed_templates'
+          rule_set_url: 'https://raw.githubusercontent.com/QuantumNeuralCoder/cfn-guard-rules-repo/refs/heads/main/trust_scope_rules.guard'
+          show_summary: 'fail'
+          output_format: 'single-line-summary'
