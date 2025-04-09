@@ -19,21 +19,25 @@ jobs:
       - name: Get list of changed .template.json files
         id: filter_files
         run: |
-          mkdir -p changed_templates
-          git diff --name-status origin/${{ github.base_ref }}...HEAD \
-            | grep -E '^(A|M)\s+.*\.template\.json$' \
-            | awk '{print $2}' > changed_files.txt || true
-
-          while IFS= read -r file; do
-            mkdir -p "changed_templates/$(dirname "$file")"
-            cp "$file" "changed_templates/$file"
-          done < changed_files.txt
-
-          if [ -s changed_files.txt ]; then
-            echo "files_changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "files_changed=false" >> $GITHUB_OUTPUT
-          fi
+            mkdir -p changed_templates
+        
+            git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
+              | grep -E '^(A|M)\s+.*\.template\.json$' \
+              | awk '{print $2}' > changed_files.txt || true
+        
+            echo "Changed files:"
+            cat changed_files.txt || echo "No changes found"
+        
+            while IFS= read -r file; do
+              mkdir -p "changed_templates/$(dirname "$file")"
+              cp "$file" "changed_templates/$file"
+            done < changed_files.txt
+        
+            if [ -s changed_files.txt ]; then
+              echo "files_changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "files_changed=false" >> $GITHUB_OUTPUT
+            fi        
 
       - name: Run cfn-guard if templates changed
         if: steps.filter_files.outputs.files_changed == 'true'
