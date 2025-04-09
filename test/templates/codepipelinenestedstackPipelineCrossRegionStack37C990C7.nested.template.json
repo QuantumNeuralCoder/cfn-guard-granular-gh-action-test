@@ -3,7 +3,7 @@
   "Role1ABCC5F0": {
    "Type": "AWS::IAM::Role",
    "Properties": {
-    "AssumeRolePolicyDocument": {
+    "AssumeRolePolicyDocument": { 
      "Statement": [
       {
        "Action": "sts:AssumeRole",
