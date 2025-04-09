@@ -37,7 +37,7 @@ jobs:
 
       - name: Run cfn-guard if templates changed
         if: steps.filter_files.outputs.files_changed == 'true'
-        uses: your-username/cfn-guard-granular-gh-action@v1
+        uses: QuantumNeuralCoder/cfn-guard-granular-gh-action@v1
         with:
           data_directory: './changed_templates'
           rule_set_url: 'https://raw.githubusercontent.com/QuantumNeuralCoder/cfn-guard-rules-repo/refs/heads/main/trust_scope_rules.guard'
