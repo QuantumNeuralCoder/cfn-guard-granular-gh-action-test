@@ -3,26 +3,35 @@ name: Validate Integ Tests
 on:
   pull_request:
     paths:
-      - '**/*.template.json'  # Only trigger if .template.json files are touched
+      - '**/*.template.json'
 
 jobs:
   validate-integ:
-    name: Validate Modified Integ Templates
+    name: Validate Changed Integ Templates
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Needed for git diff to work
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          fetch-tags: true
+
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.base_ref }} --depth=1
 
       - name: Get list of changed .template.json files
         id: filter_files
         run: |
           mkdir -p changed_templates
+
           git diff --name-status origin/${{ github.base_ref }}...HEAD \
             | grep -E '^(A|M)\s+.*\.template\.json$' \
             | awk '{print $2}' > changed_files.txt || true
+
+          echo "Changed files:"
+          cat changed_files.txt || echo "No changes found"
 
           while IFS= read -r file; do
             mkdir -p "changed_templates/$(dirname "$file")"
