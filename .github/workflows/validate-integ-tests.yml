@@ -25,6 +25,7 @@ jobs:
         id: filter_files
         run: |
             mkdir -p changed_templates
+            echo "Real work starts here. Getting ready to diff and identify the templates."
         
             git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
               | grep -E '^(A|M)\s+.*\.template\.json$' \
